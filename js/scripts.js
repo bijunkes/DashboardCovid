@@ -6,7 +6,7 @@ const _elements = {
     selectList: document.querySelector(".state-select-list"),
     selectToggleIcon: document.querySelector(".state-select-toggle__icon"),
     selectSearchBox: document.querySelector(".state-select-list__search"),
-    selectStateSelected: document.querySelector(".state-select-toggle__label"),
+    selectStateSelected: document.querySelector(".state-select-toggle__state-selected"),
     confirmed: document.querySelector(".info__total--confirmed"),
     deaths: document.querySelector(".info__total--deaths"),
     deathsDescription: document.querySelector(".data-box__description"),
@@ -41,7 +41,10 @@ _elements.stateSelectToggle.addEventListener("click", () => {
 });
 
 _elements.selectOptions.forEach(item => {
-
+    item.addEventListener("click", () => {
+        _elements.selectStateSelected.innerText = item.innerText;
+        _data.id = item.getAttribute("data-id");
+    });
 });
 
 _elements.selectSearchBox.addEventListener("keyup", (e) => {
