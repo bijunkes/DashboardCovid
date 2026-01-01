@@ -92,7 +92,22 @@ const loadData = async (id) => {
 }
 
 const createBasicChart = (element, config) => {
+    const options = {
+        chart: {
+            background: "transparent"
+        },
 
+        xaxis: {
+            type: "dateime"
+        },
+
+        series: []
+    }
+
+    const chart = new ApexCharts(document.querySelector(element), options);
+    chart.render();
+
+    return chart;
 }
 
 const createDonutChart = (element) => {
@@ -104,7 +119,10 @@ const createStackedColumnsChart = (element) => {
 }
 
 const createCharts = () => {
-
+    _charts.confirmed = createBasicChart(".data-box--confirmed .data-box__body");
+    _charts.deaths = createBasicChart(".data-box--deaths .data-box__body");
+    _charts.confirmed30 = createBasicChart(".data-box--30 .data-box__body");
+    _charts.vaccinatedAbs = createBasicChart(".data-box--vaccinated-abs .data-box__body");
 }
 
 const updateCards = () => {
