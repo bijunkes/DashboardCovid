@@ -53,10 +53,10 @@ _elements.selectOptions.forEach(item => {
 _elements.selectSearchBox.addEventListener("keyup", (e) => {
     const search = e.target.value.toLowerCase();
 
-    for(const item of _elements.selectOptions) {
+    for (const item of _elements.selectOptions) {
         const state = item.innerText.toLowerCase();
 
-        if(state.includes(search)) {
+        if (state.includes(search)) {
             item.classList.remove("state-select-list__item--hide");
         } else {
             item.classList.add("state-select-list__item--hide");
@@ -65,7 +65,6 @@ _elements.selectSearchBox.addEventListener("keyup", (e) => {
 });
 
 const request = async (api, id) => {
-
     try {
         const url = api + id;
 
@@ -87,6 +86,7 @@ const loadData = async (id) => {
     _data.vaccinatedInfo = await request(_api.vaccinatedInfo, "");
 
     updateCards();
+    updateCharts();
 
     _elements.loading.classList.add("loading--hide");
 }
@@ -98,7 +98,7 @@ const createBasicChart = (element, config) => {
         },
 
         xaxis: {
-            type: "dateime"
+            type: "datetime"
         },
 
         series: []
@@ -119,17 +119,127 @@ const createStackedColumnsChart = (element) => {
 }
 
 const createCharts = () => {
-    _charts.confirmed = createBasicChart(".data-box--confirmed .data-box__body");
-    _charts.deaths = createBasicChart(".data-box--deaths .data-box__body");
-    _charts.confirmed30 = createBasicChart(".data-box--30 .data-box__body");
+    _charts.confirmed = new ApexCharts(
+        document.querySelector(".data-box--confirmed .data-box__body"),
+        {
+            chart: {
+                type: "line",
+                background: "transparent",
+                toolbar: {
+                    show: true
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                type: "datetime"
+            },
+            colors: [
+                "#ff4d2d",
+                "#000000"
+            ],
+            stroke: {
+                width: [0, 3],
+                curve: "smooth"
+            },
+            markers: {
+                size: [0, 0]
+            },
+
+            plotOptions: {
+                bar: {
+                    columnWidth: "55%"
+                }
+            },
+            series: []
+        }
+    );
+    _charts.confirmed.render();
+
+    _charts.deaths = new ApexCharts(
+        document.querySelector(".data-box--deaths .data-box__body"),
+        {
+            chart: {
+                type: "line",
+                background: "transparent",
+                toolbar: {
+                    show: true
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                type: "datetime"
+            },
+            colors: [
+                "#ff4d2d",
+                "#000000"
+            ],
+            stroke: {
+                width: [0, 3],
+                curve: "smooth"
+            },
+            markers: {
+                size: [0, 0]
+            },
+            plotOptions: {
+                bar: {
+                    columnWidth: "55%"
+                }
+            },
+            series: []
+        }
+    );
+    _charts.deaths.render();
+
+    _charts.confirmed30 = new ApexCharts(
+        document.querySelector(".data-box--30 .data-box__body"),
+        {
+            chart: {
+                type: "line",
+                background: "transparent",
+                toolbar: {
+                    show: true
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                type: "datetime"
+            },
+            colors: [
+                "#ff4d2d",
+                "#000000"
+            ],
+            stroke: {
+                width: [0, 3],
+                curve: "smooth"
+            },
+            markers: {
+                size: [0, 0]
+            },
+
+            plotOptions: {
+                bar: {
+                    columnWidth: "55%"
+                }
+            },
+            series: []
+        }
+    );
+    _charts.confirmed30.render();
+
     _charts.vaccinatedAbs = createBasicChart(".data-box--vaccinated-abs .data-box__body");
 }
 
 const updateCards = () => {
     const uf = _ufs[_data.id];
 
-    _elements.confirmed.innerText = _data.confirmed[_data.confirmed.length-1]["total_de_casos"];
-    _elements.deaths.innerText = _data.deaths[_data.deaths.length-1]["total_de_mortes"];
+    _elements.confirmed.innerText = _data.confirmed[_data.confirmed.length - 1]["total_de_casos"];
+    _elements.deaths.innerText = _data.deaths[_data.deaths.length - 1]["total_de_mortes"];
     _elements.vaccinated1.innerText = _data.vaccinatedInfo.extras[uf].info["total-hoje-dose-1"];
     _elements.vaccinated2.innerText = _data.vaccinatedInfo.extras[uf].info["total-hoje-dose-2"] + _data.vaccinatedInfo.extras[uf].info["total-hoje-dose-unica"];
 
@@ -140,8 +250,71 @@ const updateCards = () => {
 }
 
 const updateCharts = () => {
+    _charts.confirmed30.updateSeries([
+        {
+            name: "Confirmados",
+            type: "bar",
+            data: _data.confirmed
+                .slice(-30)
+                .map(item => ({
+                    x: new Date(item.data).getTime(),
+                    y: Math.max(0, Number(item.variacao_absoluta_sobre_o_dia_anterior) || 0)
+                }))
+        },
+        {
+            name: "Média móvel",
+            type: "line",
+            data: _data.confirmed
+                .slice(-30)
+                .map(item => ({
+                    x: new Date(item.data).getTime(),
+                    y: Math.max(0, Number(item.media_semanal) || 0)
+                }))
+        }
+    ]);
 
-}
+    _charts.deaths.updateSeries([
+        {
+            name: "Mortes",
+            type: "area",
+            data: _data.deaths
+                .filter(item => item.data !== "2022-12-26")
+                .map(item => ({
+                    x: new Date(item.data).getTime(),
+                    y: Math.max(0, Number(item.variacao_absoluta_sobre_o_dia_anterior) || 0)
+                }))
+        },
+        {
+            name: "Média móvel",
+            type: "line",
+            data: _data.deaths
+                .filter(item => item.data !== "2022-12-26")
+                .map(item => ({
+                    x: new Date(item.data).getTime(),
+                    y: Math.max(0, Number(item.media_semanal) || 0)
+                }))
+        }
+    ]);
+
+
+    _charts.confirmed.updateSeries([{
+        name: "Confirmados por dia",
+        type: "area",
+        data: _data.confirmed.map(item => ({
+            x: new Date(item.data).getTime(),
+            y: Math.max(0, Number(item.variacao_absoluta_sobre_o_dia_anterior) || 0)
+        }))
+    },
+        {
+            name: "Média móvel",
+            type: "line",
+            data: _data.confirmed
+                .map(item => ({
+                    x: new Date(item.data).getTime(),
+                    y: Math.max(0, Number(item.media_semanal) || 0)
+                }))
+        }]);
+};
 
 const getChartOptions = (series, labels, colors) => {
 
