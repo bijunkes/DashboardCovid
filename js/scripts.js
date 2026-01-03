@@ -123,7 +123,6 @@ const createCharts = () => {
         document.querySelector(".data-box--confirmed .data-box__body"),
         {
             chart: {
-                type: "line",
                 background: "transparent",
                 toolbar: {
                     show: true
@@ -161,7 +160,6 @@ const createCharts = () => {
         document.querySelector(".data-box--deaths .data-box__body"),
         {
             chart: {
-                type: "line",
                 background: "transparent",
                 toolbar: {
                     show: true
@@ -174,7 +172,7 @@ const createCharts = () => {
                 type: "datetime"
             },
             colors: [
-                "#ff4d2d",
+                "#2d92ffff",
                 "#000000"
             ],
             stroke: {
@@ -198,7 +196,6 @@ const createCharts = () => {
         document.querySelector(".data-box--30 .data-box__body"),
         {
             chart: {
-                type: "line",
                 background: "transparent",
                 toolbar: {
                     show: true
@@ -232,7 +229,34 @@ const createCharts = () => {
     );
     _charts.confirmed30.render();
 
-    _charts.vaccinatedAbs = createBasicChart(".data-box--vaccinated-abs .data-box__body");
+    _charts.vaccinatedAbs = new ApexCharts(
+        document.querySelector(".data-box--vaccinated-abs .data-box__body"),
+        {
+            chart: {
+                background: "transparent",
+                toolbar: {
+                    show: true
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                type: "category"
+            },
+            stroke: {
+                width: [0, 0]
+            },
+            plotOptions: {
+                bar: {
+                    columnWidth: "60%"
+                }
+            },
+            series: []
+        }
+    );
+
+    _charts.vaccinatedAbs.render();
 }
 
 const updateCards = () => {
@@ -305,15 +329,36 @@ const updateCharts = () => {
             y: Math.max(0, Number(item.variacao_absoluta_sobre_o_dia_anterior) || 0)
         }))
     },
+    {
+        name: "Média móvel",
+        type: "line",
+        data: _data.confirmed
+            .map(item => ({
+                x: new Date(item.data).getTime(),
+                y: Math.max(0, Number(item.media_semanal) || 0)
+            }))
+    }]);
+
+    _charts.vaccinatedAbs.updateSeries([
         {
-            name: "Média móvel",
-            type: "line",
-            data: _data.confirmed
-                .map(item => ({
-                    x: new Date(item.data).getTime(),
-                    y: Math.max(0, Number(item.media_semanal) || 0)
-                }))
-        }]);
+            name: "1ª dose",
+            type: "bar",
+            data: Object.entries(_data.vaccinatedInfo.extras).map(([uf, dados]) => ({
+                x: uf,
+                y: Number(dados.info?.["total-hoje-dose-1"]) || 0
+            }))
+        },
+        {
+            name: "2ª dose + dose única",
+            type: "bar",
+            data: Object.entries(_data.vaccinatedInfo.extras).map(([uf, dados]) => ({
+                x: uf,
+                y:
+                    (Number(dados.info?.["total-hoje-dose-2"]) || 0) +
+                    (Number(dados.info?.["total-hoje-dose-unica"]) || 0)
+            }))
+        }
+    ]);
 };
 
 const getChartOptions = (series, labels, colors) => {
